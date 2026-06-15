@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hebrew Date & Parsha</title>
+  <style>
+    /* ── Tokens ── */
+    :root {
+      --gold:   #c9a84c;
+      --gold2:  #f0c96a;
+      --deep:   #0f0a1a;
+      --card:   rgba(24, 14, 40, 0.97);
+      --text:   #f5ead8;
+      --muted:  rgba(245, 234, 216, 0.45);
+      --accent: #9b6dff;
+      --radius: 22px;
+    }
+
+    /* ── Reset ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ── Body / background ── */
+    body {
+      min-height: 100dvh;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% -10%, rgba(101,60,160,0.35) 0%, transparent 70%),
+        radial-gradient(ellipse 60% 40% at 20% 100%, rgba(201,168,76,0.12) 0%, transparent 60%),
+        var(--deep);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Georgia', 'Times New Roman', serif;
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    /* ── Stars ── */
+    #stars { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+    .star {
+      position: absolute;
+      border-radius: 50%;
+      background: white;
+      opacity: var(--op);
+      animation: twinkle var(--dur) ease-in-out infinite alternate;
+    }
+    @keyframes twinkle {
+      to { opacity: calc(var(--op) * 3.5); transform: scale(1.5); }
+    }
+
+    /* ── Card ── */
+    .card {
+      position: relative;
+      z-index: 1;
+      background: var(--card);
+      border: 1px solid rgba(201, 168, 76, 0.28);
+      border-radius: var(--radius);
+      padding: clamp(2rem, 5vw, 3.5rem) clamp(1.5rem, 6vw, 4rem);
+      max-width: 660px;
+      width: min(90vw, 660px);
+      text-align: center;
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.03) inset,
+        0 4px 40px rgba(0,0,0,0.6),
+        0 0 80px rgba(139,92,246,0.12),
+        0 0 140px rgba(201,168,76,0.06);
+      animation: rise 0.75s cubic-bezier(.22,1,.36,1) both;
+    }
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(28px) scale(.98); }
+      to   { opacity: 1; transform: none; }
+    }
+
+    /* Corner ornaments */
+    .card::before,
+    .card::after {
+      content: '';
+      position: absolute;
+      width: 36px;
+      height: 36px;
+      border-color: var(--gold);
+      border-style: solid;
+      opacity: 0.38;
+    }
+    .card::before { top: 16px; left: 16px; border-width: 2px 0 0 2px; border-radius: 4px 0 0 0; }
+    .card::after  { bottom: 16px; right: 16px; border-width: 0 2px 2px 0; border-radius: 0 0 4px 0; }
+
+    /* ── Loader ── */
+    #loader {
+      width: 44px; height: 44px;
+      border: 3px solid rgba(201,168,76,0.15);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin 0.85s linear infinite;
+      margin: 2.5rem auto;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Star of David ── */
+    .magen {
+      display: block;
+      font-size: 2.4rem;
+      color: var(--gold);
+      margin-bottom: 1.4rem;
+      text-shadow: 0 0 18px rgba(201,168,76,0.55), 0 0 40px rgba(201,168,76,0.25);
+      animation: glow 3s ease-in-out infinite alternate;
+    }
+    @keyframes glow {
+      from { text-shadow: 0 0 18px rgba(201,168,76,0.55), 0 0 40px rgba(201,168,76,0.25); }
+      to   { text-shadow: 0 0 28px rgba(201,168,76,0.9), 0 0 60px rgba(201,168,76,0.45), 0 0 100px rgba(201,168,76,0.2); }
+    }
+
+    /* ── Labels / small text ── */
+    .label {
+      font-size: 0.72rem;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--gold);
+      opacity: 0.7;
+      margin-bottom: 0.5rem;
+    }
+
+    /* ── Hebrew date ── */
+    .date-en {
+      font-size: clamp(1.6rem, 5.5vw, 2.6rem);
+      font-weight: bold;
+      line-height: 1.2;
+      letter-spacing: 0.015em;
+      color: var(--text);
+    }
+    .date-he {
+      font-size: clamp(1.7rem, 5vw, 2.5rem);
+      font-family: 'Times New Roman', serif;
+      color: var(--gold2);
+      margin: 0.55rem 0 0.35rem;
+      letter-spacing: 0.05em;
+      text-shadow: 0 0 18px rgba(201,168,76,0.38);
+      line-height: 1.4;
+    }
+    .date-greg {
+      font-size: 0.88rem;
+      color: var(--muted);
+      letter-spacing: 0.09em;
+      margin-bottom: 0.5rem;
+    }
+
+    /* ── Holidays today ── */
+    .holidays {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.4rem;
+      margin: 1rem 0 0.2rem;
+    }
+    .tag {
+      background: linear-gradient(135deg, rgba(201,168,76,0.18), rgba(201,168,76,0.06));
+      border: 1px solid rgba(201,168,76,0.32);
+      color: var(--gold2);
+      border-radius: 999px;
+      padding: 0.28rem 1rem;
+      font-size: 0.82rem;
+      letter-spacing: 0.07em;
+    }
+
+    /* ── Divider ── */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+      margin: 1.6rem 0 1.2rem;
+    }
+    .divider::before,
+    .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(to right, transparent, rgba(201,168,76,0.45), transparent);
+    }
+    .divider span {
+      color: var(--gold);
+      font-size: 0.95rem;
+      opacity: 0.7;
+    }
+
+    /* ── Parsha ── */
+    .parsha-en {
+      font-size: clamp(1.4rem, 4.5vw, 2.1rem);
+      font-weight: bold;
+      color: var(--text);
+      margin-bottom: 0.35rem;
+      letter-spacing: 0.02em;
+    }
+    .parsha-he {
+      font-size: clamp(1.3rem, 4vw, 1.9rem);
+      font-family: 'Times New Roman', serif;
+      color: var(--gold2);
+      opacity: 0.88;
+      letter-spacing: 0.07em;
+      text-shadow: 0 0 14px rgba(201,168,76,0.35);
+      line-height: 1.5;
+    }
+    .book {
+      font-size: 0.82rem;
+      color: var(--accent);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      opacity: 0.75;
+      margin-top: 0.4rem;
+    }
+
+    /* ── Footer ── */
+    .footer {
+      margin-top: 2rem;
+      font-size: 0.68rem;
+      letter-spacing: 0.1em;
+      color: rgba(245,234,216,0.18);
+    }
+
+    /* ── Go to Date Button ── */
+    .go-to-date-btn {
+      display: inline-block;
+      margin: 1rem auto 0;
+      padding: 0.45rem 1.4rem;
+      font-family: 'Georgia', 'Times New Roman', serif;
+      font-size: 0.82rem;
+      letter-spacing: 0.08em;
+      color: var(--text);
+      background: var(--card);
+      border: 1px solid rgba(201, 168, 76, 0.28);
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .go-to-date-btn:hover {
+      border-color: var(--gold);
+      background: rgba(201, 168, 76, 0.08);
+    }
+    .go-to-date-btn:focus {
+      outline: none;
+      border-color: var(--gold);
+      box-shadow: 0 0 0 2px rgba(201, 168, 76, 0.25);
+    }
+
+    /* ── Date Picker Overlay ── */
+    .date-picker {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      margin-top: 0.5rem;
+      padding: 1.2rem 1.4rem;
+      background: var(--deep);
+      border: 1px solid rgba(201, 168, 76, 0.28);
+      border-radius: var(--radius);
+      font-family: 'Georgia', 'Times New Roman', serif;
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    /* ── Date Picker Inputs / Selects ── */
+    .date-picker label {
+      display: flex;
+      flex-direction: column;
+      font-size: 0.68rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      gap: 0.3rem;
+    }
+    .dp-year,
+    .dp-month,
+    .dp-day {
+      padding: 0.4rem 0.6rem;
+      font-family: 'Georgia', 'Times New Roman', serif;
+      font-size: 0.88rem;
+      color: var(--text);
+      background: var(--card);
+      border: 1px solid rgba(201, 168, 76, 0.28);
+      border-radius: 8px;
+      outline: none;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .dp-year {
+      width: 5.5rem;
+    }
+    .dp-month {
+      width: 8rem;
+    }
+    .dp-day {
+      width: 4rem;
+    }
+    .dp-year:hover,
+    .dp-month:hover,
+    .dp-day:hover {
+      background: rgba(201, 168, 76, 0.08);
+    }
+    .dp-year:focus,
+    .dp-month:focus,
+    .dp-day:focus {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 2px rgba(201, 168, 76, 0.25);
+    }
+
+    /* ── Today Button ── */
+    .today-btn {
+      display: inline-block;
+      margin: 0.75rem auto 0;
+      padding: 0.4rem 1.2rem;
+      font-family: 'Georgia', 'Times New Roman', serif;
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      color: var(--gold);
+      background: transparent;
+      border: 1px solid rgba(201, 168, 76, 0.28);
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .today-btn:hover {
+      border-color: var(--gold);
+      background: rgba(201, 168, 76, 0.08);
+    }
+    .today-btn:focus {
+      outline: none;
+      border-color: var(--gold);
+      box-shadow: 0 0 0 2px rgba(201, 168, 76, 0.25);
+    }
+
+    /* ── Error Message ── */
+    .error-msg {
+      text-align: center;
+      padding: 1.5rem 1rem;
+      color: var(--muted);
+      border: 1px solid rgba(201, 168, 76, 0.15);
+      border-radius: var(--radius);
+      margin: 1rem 0;
+    }
+    .error-msg p {
+      font-size: 0.88rem;
+      letter-spacing: 0.04em;
+      margin-top: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div id="stars"></div>
+
+  <div class="card">
+    <div id="loader"></div>
+    <div id="main"></div>
+  </div>
+
+  <script type="module" src="/main.js"></script>
+</body>
+</html>
