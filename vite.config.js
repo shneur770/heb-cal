@@ -1,5 +1,5 @@
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  base: '/heb-cal/',
+  base: process.env.VITE_BASE || '/heb-cal/',
 });
